@@ -1,0 +1,131 @@
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from datetime import datetime
+
+
+# Auth Schemas
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    persona: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Onboarding Schemas
+class OnboardingAnswer(BaseModel):
+    question_id: int
+    answer: str
+
+
+class OnboardingSubmission(BaseModel):
+    answers: list[OnboardingAnswer]
+
+
+class PersonaResponse(BaseModel):
+    persona: str
+    confidence: float
+    reasoning: str
+
+
+# Portfolio Schemas (Persona B)
+class PortfolioHolding(BaseModel):
+    ticker: str
+    shares: float
+    purchase_price: float
+
+
+class PortfolioUpload(BaseModel):
+    holdings: list[PortfolioHolding]
+
+
+class SectorAllocation(BaseModel):
+    sector: str
+    percentage: float
+    amount: float
+
+
+class PortfolioAnalysis(BaseModel):
+    total_value: float
+    sectors: list[SectorAllocation]
+    concentrated_sectors: list[str]
+    diversification_score: float
+
+
+class RebalanceRecommendation(BaseModel):
+    ticker: str
+    action: str  # "buy" or "sell"
+    shares: int
+    current_percentage: float
+    target_percentage: float
+    reasoning: str
+
+
+class RebalanceResponse(BaseModel):
+    model_type: str  # "conservative", "balanced", "growth"
+    current_allocation: list[SectorAllocation]
+    target_allocation: list[SectorAllocation]
+    recommendations: list[RebalanceRecommendation]
+
+
+# Market Data Schemas
+class TickerSearch(BaseModel):
+    symbol: str
+    name: str
+    type: str
+    region: str
+
+
+class TickerDetail(BaseModel):
+    symbol: str
+    name: str
+    sector: Optional[str] = None
+    industry: Optional[str] = None
+    market_cap: Optional[float] = None
+    description: Optional[str] = None
+
+
+# RAG Schemas (Persona C)
+class RAGQuery(BaseModel):
+    question: str
+    context: Optional[str] = None
+
+
+class RAGSource(BaseModel):
+    document_id: int
+    title: str
+    excerpt: str
+    relevance_score: float
+
+
+class RAGResponse(BaseModel):
+    answer: str
+    sources: list[RAGSource]
+    confidence: float
+
+
+class ResearchDocument(BaseModel):
+    id: int
+    title: str
+    category: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

@@ -298,12 +298,15 @@ def recommend_rebalancing(
                 ticker = sector_tickers[0]
                 current_price = ticker_details[ticker]["current_price"]
                 shares = int(value_diff / current_price)
+                amount = shares * current_price
 
                 if shares > 0:
                     recommendations.append({
                         "ticker": ticker,
+                        "sector": target_sector,
                         "action": action,
                         "shares": shares,
+                        "amount": round(amount, 2),
                         "current_percentage": round(current_pct, 2),
                         "target_percentage": round(target_pct, 2),
                         "reasoning": reasoning

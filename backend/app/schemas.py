@@ -71,8 +71,10 @@ class PortfolioAnalysis(BaseModel):
 
 class RebalanceRecommendation(BaseModel):
     ticker: str
+    sector: str
     action: str  # "buy" or "sell"
     shares: int
+    amount: float
     current_percentage: float
     target_percentage: float
     reasoning: str

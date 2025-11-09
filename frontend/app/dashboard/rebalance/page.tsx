@@ -55,6 +55,9 @@ export default function RebalancePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState<AnalysisResults | null>(null);
+  const [portfolioHoldings, setPortfolioHoldings] = useState<any[]>([]);
+  const [selectedModel, setSelectedModel] = useState<"conservative" | "balanced" | "growth">("balanced");
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -90,6 +93,32 @@ export default function RebalancePage() {
     setResults(null);
 
     try {
+      // Parse CSV to extract holdings for later rebalancing
+      const csvText = await file.text();
+      const lines = csvText.trim().split('\n');
+      const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+
+      // Find column indices (support both 'ticker' and 'symbol')
+      const tickerIdx = headers.findIndex(h => h === 'ticker' || h === 'symbol');
+      const sharesIdx = headers.indexOf('shares');
+      const priceIdx = headers.indexOf('purchase_price');
+
+      if (tickerIdx === -1 || sharesIdx === -1 || priceIdx === -1) {
+        throw new Error("CSV must contain ticker (or symbol), shares, and purchase_price columns");
+      }
+
+      const holdings = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        return {
+          ticker: values[tickerIdx].toUpperCase(),
+          shares: parseFloat(values[sharesIdx]),
+          purchase_price: parseFloat(values[priceIdx])
+        };
+      }).filter(h => h.ticker && !isNaN(h.shares) && !isNaN(h.purchase_price));
+
+      setPortfolioHoldings(holdings);
+
+      // Upload for analysis
       const formData = new FormData();
       formData.append("file", file);
 
@@ -120,7 +149,7 @@ export default function RebalancePage() {
           message: `${sector} sector is overconcentrated (>30% of portfolio)`,
           severity: "high" as const,
         })),
-        suggestions: [], // Will be populated when user selects rebalance model
+        suggestions: [], // Will be populated when user generates rebalancing suggestions
       };
 
       setResults(transformedData);
@@ -129,6 +158,51 @@ export default function RebalancePage() {
       setError(err.message || "Failed to analyze portfolio. Please check your CSV format.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateSuggestions = async () => {
+    if (!portfolioHoldings.length || !results) {
+      setError("Please upload and analyze a portfolio first");
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    setError("");
+
+    try {
+      const response = await api(`/portfolio/rebalance?model_type=${selectedModel}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          holdings: portfolioHoldings
+        })
+      });
+
+      // Transform backend recommendations to frontend suggestions format
+      // Backend now includes: { ticker, sector, action, shares, amount, current_percentage, target_percentage, reasoning }
+      // Frontend expects: { ticker, sector, action, amount, reason }
+      const suggestions: RebalanceSuggestion[] = response.recommendations.map((rec: any) => ({
+        ticker: rec.ticker,
+        sector: rec.sector,
+        action: rec.action,
+        amount: rec.amount,
+        reason: rec.reasoning
+      }));
+
+      // Update results with suggestions
+      setResults({
+        ...results,
+        suggestions: suggestions
+      });
+
+    } catch (err: any) {
+      console.error("Rebalancing error:", err);
+      setError(err.message || "Failed to generate rebalancing suggestions.");
+    } finally {
+      setLoadingSuggestions(false);
     }
   };
 
@@ -350,6 +424,41 @@ export default function RebalancePage() {
               {/* Rebalancing Suggestions */}
               <div className="bg-white rounded-lg border shadow-sm p-6">
                 <h2 className="text-lg font-semibold mb-4">Rebalancing Suggestions</h2>
+
+                {/* Model Selector and Generate Button */}
+                <div className="mb-4 p-4 bg-slate-50 rounded-lg border">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Select Rebalancing Model
+                  </label>
+                  <div className="flex gap-3 mb-3">
+                    {["conservative", "balanced", "growth"].map((model) => (
+                      <button
+                        key={model}
+                        onClick={() => setSelectedModel(model as typeof selectedModel)}
+                        className={`flex-1 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                          selectedModel === model
+                            ? "bg-slate-900 text-white"
+                            : "bg-white text-slate-700 border hover:bg-slate-100"
+                        }`}
+                      >
+                        {model.charAt(0).toUpperCase() + model.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={handleGenerateSuggestions}
+                    disabled={loadingSuggestions || !portfolioHoldings.length}
+                    className="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {loadingSuggestions ? "Generating Suggestions..." : "Generate Rebalancing Suggestions"}
+                  </button>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {selectedModel === "conservative" && "Lower risk, emphasizes stable sectors like utilities and consumer staples"}
+                    {selectedModel === "balanced" && "Moderate risk, diversified across multiple sectors"}
+                    {selectedModel === "growth" && "Higher risk, emphasizes technology and high-growth sectors"}
+                  </p>
+                </div>
+
                 <div className="space-y-3">
                   {results.suggestions.length > 0 ? (
                     results.suggestions.map((suggestion, idx) => (

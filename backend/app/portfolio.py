@@ -60,8 +60,8 @@ def parse_csv_portfolio(csv_content: str) -> List[PortfolioHolding]:
     """
     Parse CSV portfolio data.
 
-    Expected CSV format:
-    ticker,shares,purchase_price
+    Expected CSV format (accepts either 'symbol' or 'ticker'):
+    symbol,shares,purchase_price
     AAPL,100,150.00
     MSFT,50,280.00
 
@@ -78,10 +78,14 @@ def parse_csv_portfolio(csv_content: str) -> List[PortfolioHolding]:
         # Read CSV
         df = pd.read_csv(StringIO(csv_content))
 
+        # Normalize column names - accept both 'symbol' and 'ticker'
+        if 'symbol' in df.columns and 'ticker' not in df.columns:
+            df = df.rename(columns={'symbol': 'ticker'})
+
         # Validate required columns
         required_cols = ['ticker', 'shares', 'purchase_price']
         if not all(col in df.columns for col in required_cols):
-            raise ValueError(f"CSV must contain columns: {', '.join(required_cols)}")
+            raise ValueError(f"CSV must contain columns: ticker (or symbol), shares, purchase_price")
 
         # Parse holdings
         holdings = []

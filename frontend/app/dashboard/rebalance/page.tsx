@@ -35,6 +35,21 @@ type AnalysisResults = {
   suggestions: RebalanceSuggestion[];
 };
 
+// Balanced model portfolio targets (default rebalancing strategy)
+const BALANCED_MODEL: { [key: string]: number } = {
+  "Technology": 25.0,
+  "Healthcare": 15.0,
+  "Financial Services": 15.0,
+  "Consumer Cyclical": 15.0,
+  "Industrials": 10.0,
+  "Communication Services": 10.0,
+  "Consumer Defensive": 5.0,
+  "Energy": 5.0,
+  "Real Estate": 0.0,
+  "Utilities": 0.0,
+  "Basic Materials": 0.0,
+};
+
 export default function RebalancePage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -78,12 +93,37 @@ export default function RebalancePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const data = await api("/portfolio/analyze", {
+      const data = await api("/portfolio/upload", {
         method: "POST",
         body: formData,
       });
 
-      setResults(data);
+      // Transform backend response to frontend format
+      const transformedData: AnalysisResults = {
+        totalValue: data.total_value,
+        sectors: data.sectors.map((s: any) => {
+          // Get target percentage from balanced model, default to 0 if sector not in model
+          const targetPercent = BALANCED_MODEL[s.sector] || 0;
+          // Calculate difference (positive = overweight, negative = underweight)
+          const difference = s.percentage - targetPercent;
+
+          return {
+            sector: s.sector,
+            currentValue: s.amount,
+            currentPercent: s.percentage,
+            targetPercent: targetPercent,
+            difference: difference,
+          };
+        }),
+        warnings: data.concentrated_sectors.map((sector: string) => ({
+          type: "sector" as const,
+          message: `${sector} sector is overconcentrated (>30% of portfolio)`,
+          severity: "high" as const,
+        })),
+        suggestions: [], // Will be populated when user selects rebalance model
+      };
+
+      setResults(transformedData);
     } catch (err: any) {
       console.error("Analysis error:", err);
       setError(err.message || "Failed to analyze portfolio. Please check your CSV format.");

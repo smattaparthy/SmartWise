@@ -12,9 +12,13 @@ This module handles:
 from typing import List, Dict, Tuple
 import pandas as pd
 from io import StringIO
+import logging
 
 from .market_data import get_ticker_overview, get_sector_allocation
 from .schemas import PortfolioHolding
+from .llm_service import get_llm_service
+
+logger = logging.getLogger(__name__)
 
 
 # Model portfolios for rebalancing recommendations
@@ -252,7 +256,7 @@ def recommend_rebalancing(
     model_type: str = "balanced"
 ) -> List[Dict]:
     """
-    Generate rebalancing recommendations.
+    Generate rebalancing recommendations with AI-powered reasoning.
 
     Args:
         current_sectors: Current sector allocations
@@ -261,13 +265,28 @@ def recommend_rebalancing(
         model_type: "conservative", "balanced", or "growth"
 
     Returns:
-        List of rebalancing recommendations
+        List of rebalancing recommendations with AI-generated reasoning
     """
     model = MODEL_PORTFOLIOS.get(model_type, MODEL_PORTFOLIOS["balanced"])
     recommendations = []
 
     # Build current allocation map
     current_allocation = {s["sector"]: s["percentage"] for s in current_sectors}
+
+    # Calculate portfolio context for AI
+    diversification_score = calculate_diversification_score(current_sectors)
+    concentrated_sectors = detect_concentration_risks(current_sectors)
+    total_holdings = len(ticker_details)
+
+    portfolio_context = {
+        "total_holdings": total_holdings,
+        "diversification_score": diversification_score,
+        "concentrated_sectors": concentrated_sectors,
+        "total_value": total_value
+    }
+
+    # Get LLM service
+    llm_service = get_llm_service()
 
     # Find sectors to adjust
     for target_sector, target_pct in model.items():
@@ -283,10 +302,10 @@ def recommend_rebalancing(
 
             if diff > 0:  # Need to buy
                 action = "buy"
-                reasoning = f"Increase {target_sector} allocation from {current_pct:.1f}% to target {target_pct:.1f}%"
+                basic_reasoning = f"Increase {target_sector} allocation from {current_pct:.1f}% to target {target_pct:.1f}%"
             else:  # Need to sell
                 action = "sell"
-                reasoning = f"Reduce {target_sector} allocation from {current_pct:.1f}% to target {target_pct:.1f}%"
+                basic_reasoning = f"Reduce {target_sector} allocation from {current_pct:.1f}% to target {target_pct:.1f}%"
 
             # Calculate shares (simplified - would be more sophisticated in production)
             target_value = total_value * (target_pct / 100)
@@ -301,15 +320,49 @@ def recommend_rebalancing(
                 amount = shares * current_price
 
                 if shares > 0:
-                    recommendations.append({
+                    # Build recommendation
+                    recommendation = {
                         "ticker": ticker,
                         "sector": target_sector,
                         "action": action,
                         "shares": shares,
                         "amount": round(amount, 2),
                         "current_percentage": round(current_pct, 2),
-                        "target_percentage": round(target_pct, 2),
-                        "reasoning": reasoning
-                    })
+                        "target_percentage": round(target_pct, 2)
+                    }
+
+                    # Try to generate AI reasoning
+                    try:
+                        holding = {
+                            "ticker": ticker,
+                            "shares": ticker_details[ticker]["shares"],
+                            "value": ticker_details[ticker]["value"],
+                            "sector": target_sector
+                        }
+
+                        ai_reasoning = llm_service.generate_rebalancing_reasoning(
+                            holding=holding,
+                            recommendation=recommendation,
+                            model_type=model_type,
+                            portfolio_context=portfolio_context
+                        )
+
+                        if ai_reasoning:
+                            recommendation["reasoning"] = ai_reasoning
+                            recommendation["ai_generated"] = True
+                            logger.info(f"AI reasoning generated for {ticker}")
+                        else:
+                            # Fallback to basic reasoning
+                            recommendation["reasoning"] = basic_reasoning
+                            recommendation["ai_generated"] = False
+                            logger.debug(f"Using basic reasoning for {ticker}")
+
+                    except Exception as e:
+                        # Fallback to basic reasoning on error
+                        logger.error(f"Error generating AI reasoning for {ticker}: {str(e)}")
+                        recommendation["reasoning"] = basic_reasoning
+                        recommendation["ai_generated"] = False
+
+                    recommendations.append(recommendation)
 
     return recommendations

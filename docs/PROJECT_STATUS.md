@@ -18,7 +18,7 @@ The Investing Assistant is a fully functional MVP providing personalized investm
 - ✅ Three persona-specific dashboards
 - ✅ Portfolio CSV upload and analysis (Persona B)
 - ✅ Sector allocation visualization
-- ✅ Rebalancing recommendations
+- ✅ AI-powered rebalancing recommendations with Anthropic Claude
 - ✅ Market data integration (Alpha Vantage)
 - ✅ Research assistant with RAG (Persona C)
 - ✅ Responsive UI with Tailwind CSS
@@ -43,6 +43,7 @@ The Investing Assistant is a fully functional MVP providing personalized investm
 | **Auth** | JWT | - | Token-based authentication |
 | **Vector DB** | ChromaDB | Latest | RAG document storage |
 | **Market Data** | Alpha Vantage API | v1 | Stock market data |
+| **AI/LLM** | Anthropic Claude | Sonnet 3.5 | AI-powered rebalancing suggestions |
 | **Server** | Uvicorn | Latest | ASGI server |
 
 ### Frontend
@@ -462,6 +463,7 @@ smartwise_claude/
 │   │   ├── schemas.py              # Pydantic schemas
 │   │   ├── auth.py                 # JWT authentication
 │   │   ├── portfolio.py            # Portfolio analysis logic
+│   │   ├── llm_service.py          # AI/LLM integration (Anthropic Claude)
 │   │   ├── rag.py                  # RAG system logic
 │   │   └── routers/
 │   │       ├── __init__.py
@@ -520,6 +522,38 @@ smartwise_claude/
 ---
 
 ## Recent Fixes & Changes
+
+### Session: November 10, 2025
+
+#### New Feature: AI-Powered Rebalancing Suggestions ✅
+1. **Anthropic Claude Integration** ✅
+   - **Feature**: Replaced hardcoded generic rebalancing reasoning with AI-generated contextual insights
+   - **Implementation**:
+     - Added `anthropic>=0.25.0` to backend dependencies
+     - Created new `llm_service.py` module with Claude integration
+     - Updated `portfolio.py` to use AI for generating rebalancing reasoning
+     - Enhanced `schemas.py` with `ai_generated` and `confidence_score` fields
+     - Updated frontend to display "🤖 AI-Generated" badges
+   - **Files**:
+     - `backend/app/llm_service.py` (NEW)
+     - `backend/app/portfolio.py`
+     - `backend/app/schemas.py`
+     - `backend/requirements.txt`
+     - `backend/.env.example`
+     - `docker-compose.yml`
+     - `frontend/app/dashboard/rebalance/page.tsx`
+
+2. **Adaptive AI Reasoning** ✅
+   - **Simple portfolios (1-5 holdings)**: Concise reasoning (50-100 words)
+   - **Medium portfolios (6-15 holdings)**: Balanced detail (100-150 words)
+   - **Complex portfolios (15+ holdings)**: Comprehensive analysis (150-300 words)
+   - **Graceful fallback**: Falls back to basic reasoning if AI service fails
+   - **Caching**: In-memory response caching to reduce API costs
+
+3. **Environment Configuration** ✅
+   - Added `ANTHROPIC_API_KEY` to `.env.example`
+   - Added `ANTHROPIC_API_KEY` to docker-compose.yml environment variables
+   - Updated documentation with setup instructions
 
 ### Session: November 9, 2025
 

@@ -26,6 +26,7 @@ type RebalanceSuggestion = {
   action: "buy" | "sell" | "hold";
   amount: number;
   reason: string;
+  ai_generated?: boolean;
 };
 
 type AnalysisResults = {
@@ -182,14 +183,15 @@ export default function RebalancePage() {
       });
 
       // Transform backend recommendations to frontend suggestions format
-      // Backend now includes: { ticker, sector, action, shares, amount, current_percentage, target_percentage, reasoning }
-      // Frontend expects: { ticker, sector, action, amount, reason }
+      // Backend now includes: { ticker, sector, action, shares, amount, current_percentage, target_percentage, reasoning, ai_generated }
+      // Frontend expects: { ticker, sector, action, amount, reason, ai_generated }
       const suggestions: RebalanceSuggestion[] = response.recommendations.map((rec: any) => ({
         ticker: rec.ticker,
         sector: rec.sector,
         action: rec.action,
         amount: rec.amount,
-        reason: rec.reasoning
+        reason: rec.reasoning,
+        ai_generated: rec.ai_generated || false
       }));
 
       // Update results with suggestions
@@ -450,7 +452,7 @@ export default function RebalancePage() {
                     disabled={loadingSuggestions || !portfolioHoldings.length}
                     className="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {loadingSuggestions ? "Generating Suggestions..." : "Generate Rebalancing Suggestions"}
+                    {loadingSuggestions ? "Generating AI-Powered Suggestions..." : "Generate Rebalancing Suggestions"}
                   </button>
                   <p className="text-xs text-slate-500 mt-2">
                     {selectedModel === "conservative" && "Lower risk, emphasizes stable sectors like utilities and consumer staples"}
@@ -467,7 +469,7 @@ export default function RebalancePage() {
                         className="border rounded p-3 bg-slate-50 hover:bg-slate-100 transition-colors"
                       >
                         <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span
                               className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
                                 suggestion.action === "buy"
@@ -487,6 +489,11 @@ export default function RebalancePage() {
                             {suggestion.sector && (
                               <span className="text-sm text-slate-600">
                                 ({suggestion.sector})
+                              </span>
+                            )}
+                            {suggestion.ai_generated && (
+                              <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded font-medium">
+                                🤖 AI-Generated
                               </span>
                             )}
                           </div>

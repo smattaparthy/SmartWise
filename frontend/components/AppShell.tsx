@@ -34,9 +34,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex items-center gap-3">
           {!loading && me?.persona ? (
-            <span className="px-3 py-1 text-xs rounded-full bg-slate-100 text-slate-700 border">
-              Persona {me.persona}
-            </span>
+            <>
+              <span className="px-3 py-1 text-xs rounded-full bg-slate-100 text-slate-700 border">
+                Persona {me.persona}
+              </span>
+              <a
+                href="/reassess-persona"
+                className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                title="Reassess your investment persona"
+              >
+                Reassess
+              </a>
+            </>
           ) : loading ? (
             <span className="h-5 w-20 bg-slate-200 rounded animate-pulse" />
           ) : null}

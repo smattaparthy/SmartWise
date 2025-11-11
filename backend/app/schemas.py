@@ -133,3 +133,20 @@ class ResearchDocument(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Historical Data Schemas
+class TimeSeriesDataPoint(BaseModel):
+    date: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int
+
+
+class HistoricalDataResponse(BaseModel):
+    symbol: str
+    time_range: str  # "1y", "3y", "5y", "10y"
+    granularity: str  # "weekly", "monthly"
+    data: list[TimeSeriesDataPoint]

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { Alert } from "@/components/Alert";
 import { LoadingBlock } from "@/components/LoadingBlock";
+import TickerWithChart from "@/components/TickerWithChart";
 
 // Type definitions
 interface InvestmentIdea {
@@ -49,8 +50,12 @@ function IdeaCard({ idea }: { idea: InvestmentIdea }) {
     <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
       {/* Header with Ticker and Risk */}
       <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-xl font-bold text-slate-900 mb-1">{idea.ticker}</h3>
+        <div className="flex-1">
+          <TickerWithChart symbol={idea.ticker}>
+            <h3 className="text-xl font-bold text-slate-900 hover:text-blue-600 transition-colors mb-1">
+              {idea.ticker}
+            </h3>
+          </TickerWithChart>
           <p className="text-sm text-slate-600">{idea.companyName}</p>
         </div>
         <div className={`px-2 py-1 text-xs font-semibold rounded border ${riskColors[idea.riskLevel]}`}>

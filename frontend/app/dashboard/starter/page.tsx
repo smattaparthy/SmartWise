@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { LoadingBlock } from "@/components/LoadingBlock";
 import { Alert } from "@/components/Alert";
+import TickerWithChart from "@/components/TickerWithChart";
 import { api } from "@/lib/api";
 
 type CoreETF = {
@@ -163,13 +164,15 @@ export default function StarterDashboardPage() {
 
               <div className="divide-y">
                 {portfolio.map((etf) => (
-                  <div key={etf.ticker} className="p-6 hover:bg-slate-50 transition-colors">
+                  <div key={etf.ticker} className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-baseline gap-3">
-                          <h3 className="text-lg font-semibold text-slate-900">
-                            {etf.ticker}
-                          </h3>
+                          <TickerWithChart symbol={etf.ticker}>
+                            <h3 className="text-lg font-semibold text-slate-900 hover:text-blue-600 transition-colors">
+                              {etf.ticker}
+                            </h3>
+                          </TickerWithChart>
                           <span className="text-2xl font-bold text-accent">
                             {etf.weight}%
                           </span>

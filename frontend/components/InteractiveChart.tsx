@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Line } from '@ant-design/plots';
+import { DualAxes } from '@ant-design/plots';
 import TimeRangeSelector from './TimeRangeSelector';
 import { api } from '@/lib/api';
 
@@ -12,6 +12,7 @@ interface DataPoint {
   low: number;
   close: number;
   volume: number;
+  percentage_change: number;
 }
 
 interface HistoricalData {
@@ -60,15 +61,21 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({
     }
   }, [symbol, timeRange]);
 
-  const chartData = data?.data.map(d => ({
+  // Prepare data for dual Y-axis (price and percentage change)
+  const priceData = data?.data.map(d => ({
     date: d.date,
-    value: d.close
+    value: d.close,
+  })) || [];
+
+  const percentageData = data?.data.map(d => ({
+    date: d.date,
+    value: d.percentage_change,
   })) || [];
 
   const config = {
-    data: chartData,
+    data: [priceData, percentageData],
     xField: 'date',
-    yField: 'value',
+    yField: ['value', 'value'],
     smooth: true,
     animation: {
       appear: {
@@ -76,10 +83,31 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({
         duration: 1000,
       },
     },
-    lineStyle: {
-      lineWidth: 2,
-    },
-    color: '#3b82f6',
+    geometryOptions: [
+      {
+        geometry: 'line',
+        color: '#3b82f6',
+        lineStyle: {
+          lineWidth: 2,
+        },
+        point: {
+          size: 3,
+          shape: 'circle',
+        },
+      },
+      {
+        geometry: 'line',
+        color: '#10b981',
+        lineStyle: {
+          lineWidth: 2,
+          lineDash: [4, 4],
+        },
+        point: {
+          size: 3,
+          shape: 'circle',
+        },
+      },
+    ],
     xAxis: {
       label: {
         autoRotate: true,
@@ -87,21 +115,55 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({
       },
     },
     yAxis: {
-      label: {
-        formatter: (v: string) => `$${parseFloat(v).toFixed(2)}`,
+      value: {
+        label: {
+          formatter: (v: string) => `$${parseFloat(v).toFixed(2)}`,
+        },
+      },
+    },
+    meta: {
+      value: {
+        alias: 'Price',
       },
     },
     tooltip: {
+      shared: true,
+      showCrosshairs: true,
       formatter: (datum: any) => {
         return {
-          name: 'Price',
-          value: `$${datum.value.toFixed(2)}`,
+          name: datum.type || 'Value',
+          value: datum.value,
         };
       },
     },
-    point: {
-      size: 3,
-      shape: 'circle',
+    legend: {
+      position: 'top-right' as const,
+      custom: true,
+      items: [
+        {
+          name: 'Price ($)',
+          value: 'price',
+          marker: {
+            symbol: 'line',
+            style: {
+              stroke: '#3b82f6',
+              lineWidth: 2,
+            },
+          },
+        },
+        {
+          name: 'Change (%)',
+          value: 'percentage',
+          marker: {
+            symbol: 'line',
+            style: {
+              stroke: '#10b981',
+              lineWidth: 2,
+              lineDash: [4, 4],
+            },
+          },
+        },
+      ],
     },
   };
 
@@ -154,13 +216,13 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({
         </div>
       )}
 
-      {!loading && !error && chartData.length > 0 && (
+      {!loading && !error && priceData.length > 0 && (
         <div className="h-80">
-          <Line {...config} />
+          <DualAxes {...config} />
         </div>
       )}
 
-      {!loading && !error && chartData.length === 0 && (
+      {!loading && !error && priceData.length === 0 && (
         <div className="flex justify-center items-center h-80 text-gray-500">
           No data available for this time range
         </div>

@@ -138,13 +138,17 @@ def get_ticker_overview(symbol: str) -> Optional[Dict]:
 
 def get_sector_allocation(tickers: List[str]) -> Dict[str, float]:
     """
-    Get sector allocation for a list of tickers.
+    Get sector allocation for a list of tickers based on equal weighting.
+
+    NOTE: This function calculates sector allocation based on ticker count (equal weight),
+    not portfolio value. For value-weighted sector allocation, use
+    analyze_sector_allocation() from the portfolio module.
 
     Args:
         tickers: List of ticker symbols
 
     Returns:
-        Dict mapping sector name to percentage allocation
+        Dict mapping sector name to percentage allocation (equal-weighted)
     """
     sector_counts = {}
     total = 0
@@ -321,11 +325,25 @@ def get_historical_data(symbol: str, time_range: str = "1y") -> Optional[Dict]:
                     "volume": int(values.get("5. volume", 0))
                 })
 
+        # Reverse to get oldest to newest
+        data_points = list(reversed(data_points))
+
+        # Calculate percentage change from baseline (first data point)
+        if data_points:
+            baseline_price = data_points[0]["close"]
+            for point in data_points:
+                if baseline_price > 0:
+                    point["percentage_change"] = round(
+                        ((point["close"] - baseline_price) / baseline_price) * 100, 2
+                    )
+                else:
+                    point["percentage_change"] = 0.0
+
         result = {
             "symbol": symbol.upper(),
             "time_range": time_range,
             "granularity": granularity,
-            "data": list(reversed(data_points))  # Oldest to newest
+            "data": data_points
         }
 
         _set_cache(cache_key, result)
@@ -390,6 +408,7 @@ def _mock_historical_data(symbol: str, time_range: str, granularity: str) -> Dic
     data_points = []
     current_date = datetime.utcnow() - (delta * num_points)
     current_price = base_price * 0.7  # Start at 70% of current price
+    baseline_price = current_price
 
     for i in range(num_points):
         # Generate realistic price movement
@@ -403,13 +422,17 @@ def _mock_historical_data(symbol: str, time_range: str, granularity: str) -> Dic
         close = current_price
         volume = int(random.uniform(1000000, 10000000))
 
+        # Calculate percentage change from baseline
+        percentage_change = round(((close - baseline_price) / baseline_price) * 100, 2)
+
         data_points.append({
             "date": current_date.strftime("%Y-%m-%d"),
             "open": round(open_price, 2),
             "high": round(high, 2),
             "low": round(low, 2),
             "close": round(close, 2),
-            "volume": volume
+            "volume": volume,
+            "percentage_change": percentage_change
         })
 
         current_date += delta

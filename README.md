@@ -38,7 +38,7 @@ SmartWise is an intelligent investment assistant that provides personalized guid
   - Diversification scoring (0-1 scale)
   - Concentration risk detection (>30% threshold)
 - **AI-Powered Rebalancing**:
-  - Claude 3.5 Sonnet generates personalized reasoning
+  - Claude 4.5 Sonnet generates personalized reasoning
   - Three model portfolios (Conservative/Balanced/Growth)
   - Buy/sell recommendations with trade-by-trade guidance
   - Dollar amounts and share quantities
@@ -106,7 +106,7 @@ SmartWise is an intelligent investment assistant that provides personalized guid
 - **FastAPI**: High-performance REST API with automatic OpenAPI documentation
 - **Python 3.11+**: Modern Python with type hints and async support
 - **SQLAlchemy 2.0**: ORM for database operations
-- **Anthropic Claude**: AI reasoning generation via Claude 3.5 Sonnet
+- **Anthropic Claude**: AI reasoning generation via Claude 4.5 Sonnet
 - **ChromaDB**: Vector database for RAG system
 - **JWT Authentication**: Secure token-based auth with bcrypt password hashing
 - **Pytest**: Comprehensive test suite (40+ tests)
@@ -166,8 +166,8 @@ SmartWise is an intelligent investment assistant that provides personalized guid
 ### 1. Clone and Configure
 
 ```bash
-git clone https://github.com/yourusername/smartwise-claude.git
-cd smartwise-claude
+git clone https://github.com/yourusername/smartwise-ai.git
+cd smartwise-ai
 
 # Create .env file
 cat > .env << EOF
@@ -225,7 +225,7 @@ docker-compose ps
 ## 📁 Project Structure
 
 ```
-smartwise_claude/
+smartwise_ai/
 ├── backend/                    # FastAPI backend
 │   ├── app/
 │   │   ├── main.py            # FastAPI application
@@ -382,7 +382,7 @@ Comprehensive documentation available in the `docs/` directory:
 
 ### AI-Powered Portfolio Rebalancing
 
-The portfolio rebalancing feature uses Claude 3.5 Sonnet to generate personalized reasoning:
+The portfolio rebalancing feature uses Claude 4.5 Sonnet to generate personalized reasoning:
 
 ```python
 # Example rebalancing recommendation with AI reasoning
@@ -593,8 +593,8 @@ Redis (Caching) + Chroma (Vectors)
 
 1. **Fork and clone**:
 ```bash
-git clone https://github.com/yourusername/smartwise-claude.git
-cd smartwise-claude
+git clone https://github.com/yourusername/smartwise-ai.git
+cd smartwise-ai
 ```
 
 2. **Create feature branch**:
@@ -711,7 +711,7 @@ This project is for **educational purposes only**.
 
 - **FastAPI**: High-performance async Python framework
 - **Next.js**: React framework for production
-- **Anthropic**: Claude 3.5 Sonnet AI model
+- **Anthropic**: Claude 4.5 Sonnet AI model
 - **Alpha Vantage**: Market data API
 - **ChromaDB**: Vector database for RAG
 - **Tailwind CSS**: Utility-first CSS framework
@@ -722,8 +722,8 @@ This project is for **educational purposes only**.
 
 - **Documentation**: [docs/](docs/)
 - **API Reference**: http://localhost:8200/docs
-- **GitHub Issues**: [Create an issue](https://github.com/yourusername/smartwise-claude/issues)
-- **Email**: support@smartwise.example.com
+- **GitHub Issues**: [Create an issue](https://github.com/smattaparthy/SmartWise/issues)
+- **Email**: support@itarchitect.cloud
 
 ---
 

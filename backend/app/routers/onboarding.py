@@ -67,3 +67,53 @@ def get_user_persona(current_user: User = Depends(get_current_user)):
         confidence=1.0,
         reasoning="Previously classified persona"
     )
+
+
+@router.post("/reassess", response_model=PersonaResponse)
+def reassess_persona(
+    submission: OnboardingSubmission,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Reassess and update user's persona classification.
+
+    This endpoint allows users to retake the questionnaire and update their persona
+    after initial onboarding. The flow is identical to initial onboarding but
+    specifically designed for existing users who want to update their profile.
+
+    This endpoint:
+    1. Calculates risk score from new answers
+    2. Reclassifies user into Persona A, B, or C
+    3. Updates user record with new persona
+    4. Returns updated persona with confidence and reasoning
+    """
+    # Validate we have all 10 answers
+    if len(submission.answers) != 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Expected 10 answers, received {len(submission.answers)}"
+        )
+
+    # Store old persona for logging/feedback
+    old_persona = current_user.persona
+
+    # Classify persona
+    result = classify_persona(submission.answers)
+
+    # Update user with new persona
+    current_user.persona = result["persona"]
+    db.commit()
+    db.refresh(current_user)
+
+    # Add context about persona change
+    if old_persona and old_persona != result["persona"]:
+        result["reasoning"] = f"Persona updated from {old_persona} to {result['persona']}. {result['reasoning']}"
+    elif old_persona == result["persona"]:
+        result["reasoning"] = f"Persona remains {result['persona']}. {result['reasoning']}"
+
+    return PersonaResponse(
+        persona=result["persona"],
+        confidence=result["confidence"],
+        reasoning=result["reasoning"]
+    )

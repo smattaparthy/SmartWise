@@ -1,4 +1,13 @@
 export async function api(path: string, options: RequestInit = {}) {
+  // Validate that API URL is configured
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) {
+    throw new Error(
+      "API URL is not configured. Please ensure NEXT_PUBLIC_API_URL is set in your environment. " +
+      "For local development, create frontend/.env.local with NEXT_PUBLIC_API_URL=http://localhost:8200"
+    );
+  }
+
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -18,7 +27,7 @@ export async function api(path: string, options: RequestInit = {}) {
   // Exclude headers from options spread to prevent overwriting our headers
   const { headers: _ignored, ...restOptions } = options;
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
+  const res = await fetch(`${apiUrl}${path}`, {
     ...restOptions,
     headers,
   });

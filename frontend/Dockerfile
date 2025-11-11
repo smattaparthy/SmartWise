@@ -9,7 +9,11 @@ RUN npm install
 # Copy application code
 COPY . .
 
-# Build application
+# Accept build argument for API URL
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# Build application (with environment variable available)
 RUN npm run build
 
 # Expose port

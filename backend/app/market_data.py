@@ -113,9 +113,11 @@ def get_ticker_overview(symbol: str) -> Optional[Dict]:
 
         data = response.json()
 
-        # Check if we got valid data
-        if not data or "Symbol" not in data:
-            return None
+        # Check if we got valid data (API returns empty dict or error message on failure)
+        if not data or "Symbol" not in data or "Note" in data or "Error Message" in data:
+            # Fall back to mock data if API fails or rate limited
+            print(f"Alpha Vantage API unavailable for {symbol}, using mock data")
+            return _mock_ticker_overview(symbol)
 
         result = {
             "symbol": data.get("Symbol"),
@@ -130,7 +132,7 @@ def get_ticker_overview(symbol: str) -> Optional[Dict]:
         return result
 
     except Exception as e:
-        print(f"Error fetching ticker overview: {e}")
+        print(f"Error fetching ticker overview for {symbol}: {e}")
         return _mock_ticker_overview(symbol)
 
 
@@ -203,6 +205,30 @@ def _mock_ticker_overview(symbol: str) -> Optional[Dict]:
             "industry": "Software",
             "market_cap": 2500000000000.0,
             "description": "Microsoft Corporation develops, licenses, and supports software, services, devices, and solutions worldwide."
+        },
+        "NVDA": {
+            "symbol": "NVDA",
+            "name": "NVIDIA Corporation",
+            "sector": "Technology",
+            "industry": "Semiconductors",
+            "market_cap": 1800000000000.0,
+            "description": "NVIDIA Corporation provides graphics and compute solutions."
+        },
+        "INTC": {
+            "symbol": "INTC",
+            "name": "Intel Corporation",
+            "sector": "Technology",
+            "industry": "Semiconductors",
+            "market_cap": 180000000000.0,
+            "description": "Intel Corporation designs and manufactures computing and communications products."
+        },
+        "LLY": {
+            "symbol": "LLY",
+            "name": "Eli Lilly and Company",
+            "sector": "Healthcare",
+            "industry": "Pharmaceuticals",
+            "market_cap": 650000000000.0,
+            "description": "Eli Lilly and Company discovers, develops, and markets pharmaceutical products."
         },
         "SPY": {
             "symbol": "SPY",

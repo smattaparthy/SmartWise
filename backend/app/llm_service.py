@@ -158,7 +158,7 @@ Be professional, clear, and actionable. Do not include disclaimers or legal warn
             # Call Claude
             logger.info(f"Generating AI reasoning for {recommendation['ticker']}")
             message = self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-sonnet-4-5-20250929",
                 max_tokens=500,
                 messages=[
                     {"role": "user", "content": prompt}

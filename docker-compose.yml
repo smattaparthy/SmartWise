@@ -6,6 +6,8 @@ services:
     container_name: investing_assistant_backend
     ports:
       - "8200:8200"
+    env_file:
+      - .env
     volumes:
       - ./backend:/app
       - backend_venv:/app/venv
@@ -15,8 +17,8 @@ services:
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=60
-      - ALPHA_VANTAGE_API_KEY=${ALPHA_VANTAGE_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ALPHA_VANTAGE_API_KEY=
+      - ANTHROPIC_API_KEY=
       - CHROMA_PERSIST_DIRECTORY=./chroma_db
     command: uvicorn app.main:app --host 0.0.0.0 --port 8200 --reload
     restart: unless-stopped

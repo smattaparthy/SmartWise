@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Alert } from "@/components/Alert";
 import { LoadingBlock } from "@/components/LoadingBlock";
+import TickerWithChart from "@/components/TickerWithChart";
 import { api } from "@/lib/api";
 
 type SectorAllocation = {
@@ -464,44 +465,47 @@ export default function RebalancePage() {
                 <div className="space-y-3">
                   {results.suggestions.length > 0 ? (
                     results.suggestions.map((suggestion, idx) => (
-                      <div
-                        key={idx}
-                        className="border rounded p-3 bg-slate-50 hover:bg-slate-100 transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span
-                              className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                suggestion.action === "buy"
-                                  ? "bg-green-100 text-green-800"
-                                  : suggestion.action === "sell"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-slate-100 text-slate-800"
-                              }`}
-                            >
-                              {suggestion.action.toUpperCase()}
+                      <div key={idx}>
+                        <div
+                          className="border rounded p-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span
+                                className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                  suggestion.action === "buy"
+                                    ? "bg-green-100 text-green-800"
+                                    : suggestion.action === "sell"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-slate-100 text-slate-800"
+                                }`}
+                              >
+                                {suggestion.action.toUpperCase()}
+                              </span>
+                              {suggestion.ticker && (
+                                <TickerWithChart symbol={suggestion.ticker}>
+                                  <span className="font-medium text-slate-900 hover:text-blue-600 transition-colors">
+                                    {suggestion.ticker}
+                                  </span>
+                                </TickerWithChart>
+                              )}
+                              {suggestion.sector && (
+                                <span className="text-sm text-slate-600">
+                                  ({suggestion.sector})
+                                </span>
+                              )}
+                              {suggestion.ai_generated && (
+                                <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded font-medium">
+                                  🤖 AI-Generated
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-semibold text-slate-900">
+                              {formatCurrency(Math.abs(suggestion.amount))}
                             </span>
-                            {suggestion.ticker && (
-                              <span className="font-medium text-slate-900">
-                                {suggestion.ticker}
-                              </span>
-                            )}
-                            {suggestion.sector && (
-                              <span className="text-sm text-slate-600">
-                                ({suggestion.sector})
-                              </span>
-                            )}
-                            {suggestion.ai_generated && (
-                              <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded font-medium">
-                                🤖 AI-Generated
-                              </span>
-                            )}
                           </div>
-                          <span className="font-semibold text-slate-900">
-                            {formatCurrency(Math.abs(suggestion.amount))}
-                          </span>
+                          <p className="text-sm text-slate-600">{suggestion.reason}</p>
                         </div>
-                        <p className="text-sm text-slate-600">{suggestion.reason}</p>
                       </div>
                     ))
                   ) : (

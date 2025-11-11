@@ -143,6 +143,7 @@ class TimeSeriesDataPoint(BaseModel):
     low: float
     close: float
     volume: int
+    percentage_change: float  # Percentage change from baseline (first data point)
 
 
 class HistoricalDataResponse(BaseModel):

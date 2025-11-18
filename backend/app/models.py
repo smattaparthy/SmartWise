@@ -8,7 +8,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    persona = Column(String, nullable=True)  # "A", "B", or "C"
+    persona = Column(String, nullable=True)  # "A", "B", "C", or "D"
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class ResearchDoc(Base):

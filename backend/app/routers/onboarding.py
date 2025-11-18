@@ -27,15 +27,15 @@ def submit_onboarding(
 
     This endpoint:
     1. Calculates risk score from answers
-    2. Classifies user into Persona A, B, or C
+    2. Classifies user into Persona A, B, C, or D
     3. Updates user record with assigned persona
     4. Returns persona with confidence and reasoning
     """
-    # Validate we have all 10 answers
-    if len(submission.answers) != 10:
+    # Validate we have all 11 answers
+    if len(submission.answers) != 11:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Expected 10 answers, received {len(submission.answers)}"
+            detail=f"Expected 11 answers, received {len(submission.answers)}"
         )
 
     # Classify persona
@@ -84,15 +84,15 @@ def reassess_persona(
 
     This endpoint:
     1. Calculates risk score from new answers
-    2. Reclassifies user into Persona A, B, or C
+    2. Reclassifies user into Persona A, B, C, or D
     3. Updates user record with new persona
     4. Returns updated persona with confidence and reasoning
     """
-    # Validate we have all 10 answers
-    if len(submission.answers) != 10:
+    # Validate we have all 11 answers
+    if len(submission.answers) != 11:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Expected 10 answers, received {len(submission.answers)}"
+            detail=f"Expected 11 answers, received {len(submission.answers)}"
         )
 
     # Store old persona for logging/feedback

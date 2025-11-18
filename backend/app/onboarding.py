@@ -5,6 +5,7 @@ Persona Classification:
 - Persona A (Starter): Low risk tolerance, beginner, wants simple index funds
 - Persona B (Rebalance): Moderate risk, has portfolio, wants analysis and rebalancing
 - Persona C (Moonshot): High risk tolerance, wants growth ideas and research
+- Persona D (Options): Very experienced, interested in options trading strategies
 """
 
 from typing import Dict, List
@@ -101,6 +102,16 @@ QUESTIONNAIRE = [
             "middle": {"text": "30-50", "risk_score": 3},
             "older": {"text": "Over 50", "risk_score": 2}
         }
+    },
+    {
+        "id": 11,
+        "question": "Are you interested in options trading strategies?",
+        "options": {
+            "no": {"text": "No, not interested in options", "risk_score": 1, "options_interest": False},
+            "learning": {"text": "Interested in learning about options", "risk_score": 3, "options_interest": False},
+            "experienced": {"text": "Yes, I have options trading experience", "risk_score": 5, "options_interest": True},
+            "active": {"text": "Yes, I actively trade options", "risk_score": 5, "options_interest": True}
+        }
     }
 ]
 
@@ -128,31 +139,43 @@ def classify_persona(answers: List[OnboardingAnswer]) -> Dict[str, any]:
     Classify user into persona based on answers.
 
     Scoring logic:
-    - Total score range: 10-50
+    - Total score range: 10-55
     - Persona A (Starter): score <= 20
     - Persona B (Rebalance): 21 <= score <= 35
     - Persona C (Moonshot): score >= 36
+    - Persona D (Options): Experienced + interested in options trading
 
     Additional factors:
     - Q2 (has portfolio) influences B vs A/C
     - Q8 (advice type) is weighted heavily
+    - Q11 (options interest) determines D
     """
     risk_score = calculate_risk_score(answers)
 
     # Get specific answers for additional context
     has_portfolio = next((a.answer for a in answers if a.question_id == 2), None)
     advice_type = next((a.answer for a in answers if a.question_id == 8), None)
+    experience = next((a.answer for a in answers if a.question_id == 1), None)
+    options_interest = next((a.answer for a in answers if a.question_id == 11), None)
 
-    # Classification logic
-    if advice_type == "simple" or risk_score <= 20:
+    # Check for Persona D (Options) - highest priority
+    if options_interest in ["experienced", "active"] and experience in ["intermediate", "advanced"]:
+        persona = "D"
+        reasoning = "Experienced investor with options trading interest seeking advanced strategies and derivatives."
+        confidence = 0.90
+    # Classification logic for other personas
+    elif advice_type == "simple" or risk_score <= 20:
         persona = "A"
         reasoning = "Low risk tolerance and preference for simple index fund recommendations."
+        confidence = min(0.95, 0.6 + (abs(risk_score - 25) / 50))
     elif advice_type == "analysis" or (has_portfolio in ["small", "substantial"] and 21 <= risk_score <= 35):
         persona = "B"
         reasoning = "Existing portfolio with moderate risk tolerance seeking analysis and rebalancing."
+        confidence = min(0.95, 0.6 + (abs(risk_score - 25) / 50))
     elif advice_type == "ideas" or risk_score >= 36:
         persona = "C"
         reasoning = "High risk tolerance seeking aggressive growth ideas and research-backed opportunities."
+        confidence = min(0.95, 0.6 + (abs(risk_score - 25) / 50))
     else:
         # Default based on score
         if risk_score <= 20:
@@ -164,9 +187,7 @@ def classify_persona(answers: List[OnboardingAnswer]) -> Dict[str, any]:
         else:
             persona = "C"
             reasoning = "Aggressive risk profile seeking high-growth opportunities."
-
-    # Calculate confidence based on answer consistency
-    confidence = min(0.95, 0.6 + (abs(risk_score - 25) / 50))
+        confidence = min(0.95, 0.6 + (abs(risk_score - 25) / 50))
 
     return {
         "persona": persona,

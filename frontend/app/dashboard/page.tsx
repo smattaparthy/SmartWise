@@ -60,6 +60,9 @@ export default function DashboardPage() {
           case "C":
             router.push("/dashboard/moonshot");
             break;
+          case "D":
+            router.push("/dashboard/options");
+            break;
           default:
             // Unknown persona, redirect to onboarding
             router.push("/onboarding");
